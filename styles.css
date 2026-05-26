@@ -103,6 +103,8 @@ button:hover { border-color: rgba(34, 211, 238, .72); background: rgba(24, 42, 6
 .node.match .node-card { stroke: var(--match); stroke-width: 2.4; }
 .node-text { fill: var(--text); font-size: 13px; dominant-baseline: middle; pointer-events: none; }
 .node-subtext { fill: var(--muted); font-size: 10.5px; dominant-baseline: middle; pointer-events: none; }
+.node.bookmark .node-card { fill: rgba(13, 26, 44, .99); }
+.node.bookmark:hover .node-card { stroke: var(--match); stroke-width: 2.2; }
 .count-pill { fill: rgba(245, 158, 11, .16); stroke: rgba(245, 158, 11, .64); }
 .count-text { fill: #fde68a; font-size: 10.5px; dominant-baseline: middle; text-anchor: middle; pointer-events: none; }
 .dot { fill: var(--panel); stroke: rgba(96, 165, 250, .9); stroke-width: 1.7; }
@@ -121,6 +123,37 @@ button:hover { border-color: rgba(34, 211, 238, .72); background: rgba(24, 42, 6
   background: rgba(35, 16, 29, .92);
   color: #ffe4e6;
 }
+.hover-card {
+  position: absolute;
+  z-index: 5;
+  width: min(440px, calc(100vw - 32px));
+  padding: 12px 13px;
+  border: 1px solid rgba(250, 204, 21, .62);
+  border-radius: 14px;
+  background: rgba(9, 16, 29, .97);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .42), 0 0 28px rgba(250, 204, 21, .12);
+  pointer-events: none;
+}
+.hover-card-title {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.hover-card-url {
+  margin-top: 6px;
+  color: #93c5fd;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.hover-card-hint {
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
 .hint {
   position: absolute;
   right: 18px;

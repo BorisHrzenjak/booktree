@@ -5,10 +5,11 @@ const nodesLayer = document.getElementById('nodes');
 const searchInput = document.getElementById('searchInput');
 const summary = document.getElementById('summary');
 const message = document.getElementById('message');
+const hoverCard = document.getElementById('hoverCard');
 
-const NODE_W = 150;
+const NODE_W = 176;
 const NODE_H = 38;
-const X_GAP = 178;
+const X_GAP = 206;
 const Y_GAP = 50;
 const MIN_ZOOM = 0.18;
 const MAX_ZOOM = 2.8;
@@ -275,6 +276,11 @@ function drawNodes() {
     drawText(group, node);
 
     group.addEventListener('pointerdown', (event) => event.stopPropagation());
+    group.addEventListener('pointerenter', (event) => showHoverCard(event, node));
+    group.addEventListener('pointermove', (event) => moveHoverCard(event));
+    group.addEventListener('pointerleave', hideHoverCard);
+    group.addEventListener('focus', (event) => showHoverCard(event, node));
+    group.addEventListener('blur', hideHoverCard);
     group.addEventListener('click', (event) => handleNodeClick(event, node));
     group.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' || event.key === ' ') {
@@ -338,7 +344,7 @@ function drawText(group, node) {
   label.setAttribute('class', 'node-text');
   label.setAttribute('x', '34');
   label.setAttribute('y', NODE_H / 2 + (node.url ? -4 : 0));
-  label.textContent = truncate(node.title, node.collapsed ? 12 : 16);
+  label.textContent = truncate(node.title, node.collapsed ? 16 : node.url ? 21 : 20);
   group.append(label);
 
   if (node.url) {
@@ -346,7 +352,7 @@ function drawText(group, node) {
     sub.setAttribute('class', 'node-subtext');
     sub.setAttribute('x', '34');
     sub.setAttribute('y', NODE_H / 2 + 10);
-    sub.textContent = truncate(hostFromUrl(node.url), 18);
+    sub.textContent = truncate(hostFromUrl(node.url), 22);
     group.append(sub);
   }
 }
@@ -484,6 +490,42 @@ function applyTransform() {
 function clearSvg() {
   linksLayer.replaceChildren();
   nodesLayer.replaceChildren();
+}
+
+function showHoverCard(event, node) {
+  if (!node.url) return;
+  hoverCard.innerHTML = `
+    <div class="hover-card-title"></div>
+    <div class="hover-card-url"></div>
+    <div class="hover-card-hint">Click to open here · Ctrl/Cmd-click to open in a new tab</div>
+  `;
+  hoverCard.querySelector('.hover-card-title').textContent = node.title;
+  hoverCard.querySelector('.hover-card-url').textContent = node.url;
+  hoverCard.hidden = false;
+  moveHoverCard(event);
+}
+
+function moveHoverCard(event) {
+  if (hoverCard.hidden || typeof event.clientX !== 'number') return;
+  const stageRect = document.getElementById('stage').getBoundingClientRect();
+  const cardRect = hoverCard.getBoundingClientRect();
+  const margin = 14;
+  let left = event.clientX - stageRect.left + 18;
+  let top = event.clientY - stageRect.top + 18;
+
+  if (left + cardRect.width + margin > stageRect.width) {
+    left = event.clientX - stageRect.left - cardRect.width - 18;
+  }
+  if (top + cardRect.height + margin > stageRect.height) {
+    top = event.clientY - stageRect.top - cardRect.height - 18;
+  }
+
+  hoverCard.style.left = `${Math.max(margin, left)}px`;
+  hoverCard.style.top = `${Math.max(margin, top)}px`;
+}
+
+function hideHoverCard() {
+  hoverCard.hidden = true;
 }
 
 function showMessage(text) {
