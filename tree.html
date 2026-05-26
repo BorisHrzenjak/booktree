@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BookTree</title>
+    <link rel="icon" href="icons/icon-32.png">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="toolbar">
+      <div class="brand">
+        <img class="mark" src="icons/icon-48.png" alt="" aria-hidden="true">
+        <div>
+          <h1>BookTree</h1>
+          <p id="summary">Loading bookmarks…</p>
+        </div>
+      </div>
+
+      <label class="search">
+        <span class="sr-only">Search bookmarks</span>
+        <input id="searchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Search titles and URLs…">
+      </label>
+
+      <div class="actions" aria-label="View controls">
+        <button id="zoomOutButton" type="button" title="Zoom out">−</button>
+        <button id="zoomInButton" type="button" title="Zoom in">+</button>
+        <button id="fitButton" type="button">Fit</button>
+        <button id="resetButton" type="button">Reset</button>
+        <button id="expandButton" type="button">Expand</button>
+        <button id="collapseButton" type="button">Collapse</button>
+      </div>
+    </header>
+
+    <main class="stage" id="stage">
+      <div id="message" class="message" hidden></div>
+      <svg id="treeSvg" role="img" aria-label="Bookmark tree graph">
+        <g id="viewport">
+          <g id="links"></g>
+          <g id="nodes"></g>
+        </g>
+      </svg>
+      <div class="hint">Drag canvas to pan · wheel or buttons to zoom · click folders to expand · click bookmarks to open</div>
+    </main>
+
+    <script src="tree.js"></script>
+  </body>
+</html>

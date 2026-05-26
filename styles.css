@@ -1,0 +1,149 @@
+:root {
+  color-scheme: dark;
+  --bg: #08111f;
+  --panel: #0f1828;
+  --panel-strong: #142034;
+  --line: #38bdf8;
+  --line-muted: #245a82;
+  --text: #edf7ff;
+  --muted: #91a7bd;
+  --accent: #22d3ee;
+  --accent-2: #f59e0b;
+  --match: #facc15;
+  --danger: #fb7185;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 10%, rgba(34, 211, 238, .10), transparent 28rem),
+    radial-gradient(circle at 84% 18%, rgba(37, 99, 235, .16), transparent 32rem),
+    var(--bg);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.toolbar {
+  height: 76px;
+  display: grid;
+  grid-template-columns: minmax(230px, 330px) minmax(260px, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  padding: 12px 18px;
+  background: rgba(8, 17, 31, .88);
+  border-bottom: 1px solid rgba(56, 189, 248, .16);
+  backdrop-filter: blur(14px);
+}
+
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.mark {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: 0 0 28px rgba(56, 189, 248, .24);
+}
+h1 { margin: 0; font-size: 18px; letter-spacing: .02em; }
+p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+
+.search input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid rgba(56, 189, 248, .24);
+  border-radius: 13px;
+  background: rgba(15, 24, 40, .96);
+  color: var(--text);
+  outline: none;
+  padding: 0 14px;
+  font-size: 14px;
+}
+.search input:focus { border-color: rgba(34, 211, 238, .86); box-shadow: 0 0 0 3px rgba(34, 211, 238, .12); }
+
+.actions { display: flex; gap: 8px; }
+#zoomInButton, #zoomOutButton { width: 38px; padding: 0; font-size: 18px; }
+button {
+  height: 38px;
+  border: 1px solid rgba(56, 189, 248, .22);
+  border-radius: 11px;
+  background: rgba(20, 32, 52, .96);
+  color: var(--text);
+  cursor: pointer;
+  padding: 0 13px;
+  font: inherit;
+  font-size: 13px;
+}
+button:hover { border-color: rgba(34, 211, 238, .72); background: rgba(24, 42, 68, .98); }
+
+.stage { position: relative; height: calc(100vh - 76px); }
+#treeSvg { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+#treeSvg.dragging { cursor: grabbing; }
+
+.link {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: .72;
+}
+.link.dimmed { stroke: var(--line-muted); opacity: .42; }
+
+.node { cursor: pointer; }
+.node-card {
+  fill: rgba(15, 24, 40, .98);
+  stroke: rgba(34, 211, 238, .86);
+  stroke-width: 1.7;
+  filter: drop-shadow(0 0 7px rgba(34, 211, 238, .17));
+}
+.node:hover .node-card { stroke: rgba(125, 211, 252, .98); filter: drop-shadow(0 0 12px rgba(34, 211, 238, .32)); }
+.node.bookmark .node-card { stroke: rgba(96, 165, 250, .68); }
+.node.match .node-card { stroke: var(--match); stroke-width: 2.4; }
+.node-text { fill: var(--text); font-size: 13px; dominant-baseline: middle; pointer-events: none; }
+.node-subtext { fill: var(--muted); font-size: 10.5px; dominant-baseline: middle; pointer-events: none; }
+.count-pill { fill: rgba(245, 158, 11, .16); stroke: rgba(245, 158, 11, .64); }
+.count-text { fill: #fde68a; font-size: 10.5px; dominant-baseline: middle; text-anchor: middle; pointer-events: none; }
+.dot { fill: var(--panel); stroke: rgba(96, 165, 250, .9); stroke-width: 1.7; }
+.toggle { fill: rgba(34, 211, 238, .14); stroke: rgba(34, 211, 238, .78); stroke-width: 1.4; }
+.toggle-text { fill: var(--text); font-size: 12px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+
+.message {
+  position: absolute;
+  inset: 24px auto auto 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  max-width: min(560px, calc(100vw - 40px));
+  padding: 14px 16px;
+  border: 1px solid rgba(251, 113, 133, .42);
+  border-radius: 14px;
+  background: rgba(35, 16, 29, .92);
+  color: #ffe4e6;
+}
+.hint {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  color: rgba(203, 213, 225, .78);
+  font-size: 12px;
+  background: rgba(8, 17, 31, .66);
+  border: 1px solid rgba(148, 163, 184, .16);
+  border-radius: 999px;
+  padding: 8px 11px;
+  pointer-events: none;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+@media (max-width: 760px) {
+  .toolbar { height: auto; grid-template-columns: 1fr; align-items: stretch; }
+  .stage { height: calc(100vh - 184px); }
+  .actions { justify-content: stretch; }
+  button { flex: 1; }
+}
