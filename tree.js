@@ -274,6 +274,7 @@ function drawNodes() {
     else drawFolderMark(group, node);
 
     drawText(group, node);
+    drawDeleteButton(group, node);
 
     group.addEventListener('pointerdown', (event) => event.stopPropagation());
     group.addEventListener('pointerenter', (event) => showHoverCard(event, node));
@@ -339,6 +340,46 @@ function drawFolderMark(group, node) {
   }
 }
 
+function drawDeleteButton(group, node) {
+  if (!canDeleteNode(node)) return;
+
+  const button = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  button.setAttribute('class', 'delete-hit');
+  button.setAttribute('tabindex', '0');
+  button.setAttribute('role', 'button');
+  button.setAttribute('aria-label', `Delete ${node.type} ${node.title}`);
+  button.setAttribute('transform', `translate(${NODE_W - 32}, 5)`);
+
+  const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  bg.setAttribute('class', 'delete-bg');
+  bg.setAttribute('width', '27');
+  bg.setAttribute('height', '27');
+  bg.setAttribute('rx', '9');
+  button.append(bg);
+
+  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  icon.setAttribute('class', 'delete-icon');
+  icon.setAttribute('d', 'M9 11.2h9m-7.8 0 .55 8.1c.05.75.55 1.2 1.3 1.2h3.9c.75 0 1.25-.45 1.3-1.2l.55-8.1M12.2 9.3h3.6m-2.8 4.1v4.7m2-4.7v4.7M11.6 9.3l.45-1.05c.14-.33.42-.5.78-.5h2.34c.36 0 .64.17.78.5l.45 1.05');
+  button.append(icon);
+
+  button.addEventListener('pointerdown', (event) => event.stopPropagation());
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    hideHoverCard();
+    confirmAndDelete(node);
+  });
+  button.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      event.stopPropagation();
+      hideHoverCard();
+      confirmAndDelete(node);
+    }
+  });
+
+  group.append(button);
+}
+
 function drawText(group, node) {
   const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
   label.setAttribute('class', 'node-text');
@@ -358,6 +399,7 @@ function drawText(group, node) {
 }
 
 function handleNodeClick(event, node) {
+  if (event.target.closest?.('.delete-hit')) return;
   event.stopPropagation();
 
   if (node.type === 'folder') {
@@ -379,6 +421,69 @@ function handleNodeClick(event, node) {
       window.location.href = node.url;
     }
   });
+}
+
+function canDeleteNode(node) {
+  if (!node || node.isRoot) return false;
+  const source = node.source;
+  // Chrome's permanent top-level bookmark folders should not be deletable here.
+  if (source?.type === 'folder' && source.parent?.isRoot) return false;
+  return true;
+}
+
+function confirmAndDelete(node) {
+  const source = node.source;
+  if (!source || !canDeleteNode(node)) return;
+
+  const isFolder = source.type === 'folder';
+  const message = isFolder
+    ? `Delete folder “${source.title}” and all ${source.totalBookmarks} bookmark${source.totalBookmarks === 1 ? '' : 's'} inside it?\n\nThis cannot be undone from BookTree.`
+    : `Delete bookmark “${source.title}”?\n\n${source.url}\n\nThis cannot be undone from BookTree.`;
+
+  if (!window.confirm(message)) return;
+
+  const remove = isFolder ? chrome.bookmarks.removeTree : chrome.bookmarks.remove;
+  remove(String(source.id), () => {
+    const error = chrome.runtime.lastError;
+    if (error) {
+      showMessage(`Could not delete: ${error.message}`);
+      return;
+    }
+
+    removeNodeFromTree(rootNode, source.id);
+    expanded.delete(source.id);
+    recomputeTreeStats();
+    render();
+    showTemporaryNotice(isFolder ? 'Folder deleted' : 'Bookmark deleted');
+  });
+}
+
+function removeNodeFromTree(parent, id) {
+  if (!parent?.children?.length) return false;
+  const index = parent.children.findIndex((child) => child.id === id);
+  if (index >= 0) {
+    parent.children.splice(index, 1);
+    return true;
+  }
+  return parent.children.some((child) => removeNodeFromTree(child, id));
+}
+
+function recomputeTreeStats() {
+  bookmarkCount = 0;
+  folderCount = 0;
+
+  function walk(node) {
+    if (node.type === 'bookmark') {
+      bookmarkCount += 1;
+      node.totalBookmarks = 1;
+      return 1;
+    }
+    folderCount += 1;
+    node.totalBookmarks = node.children.reduce((sum, child) => sum + walk(child), 0);
+    return node.totalBookmarks;
+  }
+
+  walk(rootNode);
 }
 
 function wireEvents() {
@@ -526,6 +631,13 @@ function moveHoverCard(event) {
 
 function hideHoverCard() {
   hoverCard.hidden = true;
+}
+
+function showTemporaryNotice(text) {
+  message.textContent = text;
+  message.hidden = false;
+  window.clearTimeout(showTemporaryNotice.timer);
+  showTemporaryNotice.timer = window.setTimeout(clearMessage, 1800);
 }
 
 function showMessage(text) {

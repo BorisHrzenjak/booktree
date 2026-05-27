@@ -105,6 +105,37 @@ button:hover { border-color: rgba(34, 211, 238, .72); background: rgba(24, 42, 6
 .node-subtext { fill: var(--muted); font-size: 10.5px; dominant-baseline: middle; pointer-events: none; }
 .node.bookmark .node-card { fill: rgba(13, 26, 44, .99); }
 .node.bookmark:hover .node-card { stroke: var(--match); stroke-width: 2.2; }
+.delete-hit {
+  opacity: 0;
+  transform: translateY(-2px) scale(.92);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity .14s ease-out, transform .14s ease-out;
+  cursor: pointer;
+}
+.node:hover .delete-hit, .node:focus .delete-hit {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.delete-bg {
+  fill: rgba(45, 18, 27, .96);
+  stroke: rgba(251, 113, 133, .72);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, .28));
+}
+.delete-icon {
+  fill: none;
+  stroke: #fecdd3;
+  stroke-width: 1.45;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.delete-hit:hover .delete-bg {
+  fill: rgba(136, 19, 55, .98);
+  stroke: rgba(254, 202, 202, .98);
+}
+.delete-hit:hover .delete-icon { stroke: #fff1f2; }
 .count-pill { fill: rgba(245, 158, 11, .16); stroke: rgba(245, 158, 11, .64); }
 .count-text { fill: #fde68a; font-size: 10.5px; dominant-baseline: middle; text-anchor: middle; pointer-events: none; }
 .dot { fill: var(--panel); stroke: rgba(96, 165, 250, .9); stroke-width: 1.7; }
