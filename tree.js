@@ -6,6 +6,7 @@ const searchInput = document.getElementById('searchInput');
 const summary = document.getElementById('summary');
 const message = document.getElementById('message');
 const hoverCard = document.getElementById('hoverCard');
+const pathBar = document.getElementById('pathBar');
 
 const NODE_W = 176;
 const NODE_H = 38;
@@ -23,6 +24,8 @@ let savedExpanded = null;
 let searchQuery = '';
 let transform = { x: 40, y: 40, k: 1 };
 let dragState = null;
+let suppressCanvasClick = false;
+let activePathNode = null;
 let bookmarkCount = 0;
 let folderCount = 0;
 let lastBounds = null;
@@ -123,6 +126,7 @@ function render() {
   if (!visibleRoot) {
     clearSvg();
     summary.textContent = `No matches for “${searchQuery}”`;
+    updateActivePath();
     return;
   }
 
@@ -136,6 +140,8 @@ function render() {
   } else {
     summary.textContent = `${bookmarkCount} bookmarks · ${Math.max(folderCount - 1, 0)} folders`;
   }
+
+  updateActivePath();
 }
 
 function buildExpandedTree(node) {
@@ -404,6 +410,7 @@ function handleNodeClick(event, node) {
 
   if (node.type === 'folder') {
     if (searchQuery) return;
+    activePathNode = node.source;
     if (expanded.has(node.id)) expanded.delete(node.id);
     else expanded.add(node.id);
     render();
@@ -452,6 +459,7 @@ function confirmAndDelete(node) {
 
     removeNodeFromTree(rootNode, source.id);
     expanded.delete(source.id);
+    activePathNode = null;
     recomputeTreeStats();
     render();
     showTemporaryNotice(isFolder ? 'Folder deleted' : 'Bookmark deleted');
@@ -495,6 +503,7 @@ function wireEvents() {
       savedExpanded = null;
     }
     searchQuery = next;
+    if (searchQuery) activePathNode = null;
     render();
     requestAnimationFrame(fitToScreen);
   });
@@ -512,6 +521,7 @@ function wireEvents() {
     searchInput.value = '';
     searchQuery = '';
     savedExpanded = null;
+    activePathNode = null;
     render();
     requestAnimationFrame(fitToScreen);
   });
@@ -520,6 +530,7 @@ function wireEvents() {
     searchInput.value = '';
     searchQuery = '';
     savedExpanded = null;
+    activePathNode = null;
     render();
     requestAnimationFrame(fitToScreen);
   });
@@ -528,16 +539,24 @@ function wireEvents() {
     if (event.button !== 0 || event.target.closest?.('.node')) return;
     svg.setPointerCapture(event.pointerId);
     svg.classList.add('dragging');
-    dragState = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, originX: transform.x, originY: transform.y };
+    dragState = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, originX: transform.x, originY: transform.y, moved: false };
   });
   svg.addEventListener('pointermove', (event) => {
     if (!dragState || dragState.pointerId !== event.pointerId) return;
-    transform.x = dragState.originX + event.clientX - dragState.startX;
-    transform.y = dragState.originY + event.clientY - dragState.startY;
+    const dx = event.clientX - dragState.startX;
+    const dy = event.clientY - dragState.startY;
+    if (Math.hypot(dx, dy) > 4) dragState.moved = true;
+    transform.x = dragState.originX + dx;
+    transform.y = dragState.originY + dy;
     applyTransform();
   });
   svg.addEventListener('pointerup', endDrag);
   svg.addEventListener('pointercancel', endDrag);
+  svg.addEventListener('click', (event) => {
+    if (suppressCanvasClick || searchQuery || event.target.closest?.('.node')) return;
+    activePathNode = null;
+    updateActivePath();
+  });
 
   svg.addEventListener('wheel', (event) => {
     event.preventDefault();
@@ -553,8 +572,10 @@ function wireEvents() {
 
 function endDrag(event) {
   if (!dragState || dragState.pointerId !== event.pointerId) return;
+  suppressCanvasClick = dragState.moved;
   dragState = null;
   svg.classList.remove('dragging');
+  if (suppressCanvasClick) window.setTimeout(() => { suppressCanvasClick = false; }, 0);
 }
 
 function zoomFromCenter(factor) {
@@ -595,6 +616,44 @@ function applyTransform() {
 function clearSvg() {
   linksLayer.replaceChildren();
   nodesLayer.replaceChildren();
+}
+
+function updateActivePath() {
+  if (!activePathNode || searchQuery) {
+    pathBar.hidden = true;
+    pathBar.replaceChildren();
+    return;
+  }
+
+  const segments = [];
+  let current = activePathNode;
+  while (current) {
+    segments.unshift(current.title || (current.type === 'folder' ? 'Untitled folder' : 'Untitled bookmark'));
+    current = current.parent;
+  }
+
+  pathBar.replaceChildren();
+  const label = document.createElement('span');
+  label.className = 'path-label';
+  label.textContent = 'Active path';
+  pathBar.append(label);
+
+  segments.forEach((segment, index) => {
+    if (index > 0) {
+      const separator = document.createElement('span');
+      separator.className = 'path-separator';
+      separator.textContent = '/';
+      pathBar.append(separator);
+    }
+
+    const item = document.createElement('span');
+    item.className = 'path-segment';
+    item.textContent = segment;
+    item.title = segment;
+    pathBar.append(item);
+  });
+
+  pathBar.hidden = false;
 }
 
 function showHoverCard(event, node) {
