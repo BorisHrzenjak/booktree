@@ -2,7 +2,9 @@
 
 A Chrome extension that opens your bookmarks as a compact, searchable tree graph.
 
-<video src="video/booktree-demo.mp4" controls width="100%" title="BookTree demo"></video>
+[![BookTree demo video](video/booktree-demo-poster.png)](video/booktree-demo.mp4)
+
+[Watch the demo video](video/booktree-demo.mp4)
 
 ## Install locally
 
